@@ -5,6 +5,12 @@ const connectDB = require("./config/db");
 
 const app = express();
 
+// Check if MONGODB_URI is defined
+if (!process.env.MONGODB_URI) {
+  console.error("MONGODB_URI is not defined in .env file");
+  process.exit(1);
+}
+
 // Connect Database
 connectDB();
 
