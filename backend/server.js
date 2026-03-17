@@ -1,66 +1,128 @@
-
-const path = require('path');
-const dotenv = require('dotenv');
-
-// Load .env with absolute path
-const result = dotenv.config({ path: path.join(__dirname, '.env') });
-
-if (result.error) {
-  console.error('❌ Failed to load .env file:', result.error);
-  console.error('📁 Please create a .env file in:', __dirname);
-  process.exit(1);
-}
-
-console.log('✅ .env file loaded successfully');
-console.log('📁 .env location:', path.join(__dirname, '.env'));
-
-// Verify MONGODB_URI is loaded
-if (!process.env.MONGODB_URI) {
-  console.error('❌ MONGODB_URI is not defined in .env file');
-  console.error('📝 Add this to your .env file:');
-  console.error('   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/dbname');
-  process.exit(1);
-}
-
 const express = require('express');
-const cors = require('cors');
 const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+const cors = require('cors');
+
+// Load environment variables FIRST
+dotenv.config();
+
+// Import routes
+const authRoutes = require('./routes/authRoutes');
+const violationRoutes = require('./routes/violationRoutes');
 
 const app = express();
 
-// Middleware
+// ==================== MIDDLEWARE ====================
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Connect to MongoDB
-console.log('🔄 Connecting to MongoDB...');
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`📨 ${req.method} ${req.url}`);
+  if (req.method === 'POST' || req.method === 'PUT') {
+    console.log('Request Body:', req.body);
+  }
+  next();
+});
+
+// ==================== DATABASE CONNECTION ====================
+if (!process.env.MONGODB_URI) {
+  console.error('❌ MONGODB_URI is not defined in .env file');
+  process.exit(1);
+}
+
 mongoose.connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log('✅ MongoDB Connected Successfully');
-    console.log('📊 Database:', mongoose.connection.name);
-  })
+  .then(() => console.log('✅ MongoDB Connected Successfully'))
   .catch(err => {
-    console.error('❌ MongoDB connection error:', err.message);
-    console.error('🔍 Please check your MONGODB_URI in .env file');
+    console.error('❌ MongoDB Connection Error:', err.message);
     process.exit(1);
   });
 
-// Routes
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/violations', require('./routes/violationRoutes'));
+// ==================== ROUTES ====================
+app.use('/api/auth', authRoutes);
+app.use('/api/violations', violationRoutes);
 
-// Health check
-app.get('/', (req, res) => {
-  res.json({
-    status: 'healthy',
-    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
-    timestamp: new Date().toISOString()
+// ==================== HEALTH CHECK ENDPOINTS ====================
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    success: true,
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
   });
 });
 
+app.get('/', (req, res) => {
+  res.status(200).json({
+    success: true,
+    name: 'ECIS API',
+    version: '1.0.0',
+    status: 'running',
+    endpoints: {
+      auth: {
+        register: 'POST /api/auth/register',
+        login: 'POST /api/auth/login'
+      },
+      violations: {
+        getAll: 'GET /api/violations',
+        create: 'POST /api/violations',
+        analytics: 'GET /api/violations/analytics'
+      }
+    }
+  });
+});
+
+// Test endpoint
+app.post('/test', (req, res) => {
+  console.log('Test endpoint hit with body:', req.body);
+  res.json({ 
+    success: true, 
+    message: 'Test endpoint working',
+    receivedData: req.body 
+  });
+});
+
+// ==================== ERROR HANDLING ====================
+// 404 handler - FIXED: removed '*'
+app.use((req, res) => {
+  console.log(`❌ 404 Not Found: ${req.method} ${req.originalUrl}`);
+  res.status(404).json({ 
+    success: false, 
+    message: `Cannot ${req.method} ${req.originalUrl}`,
+    note: 'Please check the available endpoints at GET /'
+  });
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('❌ Server Error:', err.stack);
+  res.status(500).json({ 
+    success: false, 
+    message: 'Internal server error',
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+});
+
+// ==================== START SERVER ====================
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📍 Local: http://localhost:${PORT}`);
+const server = app.listen(PORT, () => {
+  console.log('\n' + '='.repeat(50));
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log('='.repeat(50) + '\n');
 });
+
+// Handle graceful shutdown
+process.on('SIGINT', () => {
+  console.log('\n👋 Shutting down server...');
+  server.close(() => {
+    mongoose.connection.close(false, () => {
+      console.log('✅ MongoDB connection closed');
+      process.exit(0);
+    });
+  });
+});
+
+module.exports = app;

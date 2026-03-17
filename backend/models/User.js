@@ -4,19 +4,22 @@ const bcrypt = require('bcryptjs');
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true,
+    required: [true, 'Please provide a name'],
     trim: true
   },
   email: {
     type: String,
-    required: true,
+    required: [true, 'Please provide an email'],
     unique: true,
     lowercase: true,
-    trim: true
+    trim: true,
+    match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email']
   },
   password: {
     type: String,
-    required: true
+    required: [true, 'Please provide a password'],
+    minlength: 6,
+    select: false
   },
   role: {
     type: String,
@@ -26,26 +29,23 @@ const userSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
-  },
-  lastLogin: {
-    type: Date
   }
 });
 
-// Hash password before saving
-userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
+// Hash password before saving - NO NEXT() PARAMETER
+userSchema.pre('save', async function() {
+  // Only hash if password is modified
+  if (!this.isModified('password')) {
+    return; // Just return, no need to call next()
+  }
   
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (error) {
-    next(error);
-  }
+  // Generate salt and hash password
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  // That's it! No next() needed - mongoose continues automatically
 });
 
-// Method to compare passwords
+// Compare password method
 userSchema.methods.comparePassword = async function(candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
