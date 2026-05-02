@@ -13,7 +13,20 @@ const violationSchema = new mongoose.Schema({
   crimeType: {
     type: String,
     required: [true, 'Please provide crime type'],
-    enum: ['theft', 'assault', 'vandalism', 'fraud', 'traffic', 'other']
+    enum: [
+      'illegal_logging',
+      'illegal_mining',
+      'water_pollution',
+      'land_degradation',
+      'ecosystem_damage',
+      'none',
+      'theft',
+      'assault',
+      'vandalism',
+      'fraud',
+      'traffic',
+      'other'
+    ]
   },
   riskScore: {
     type: Number,
@@ -65,8 +78,35 @@ const violationSchema = new mongoose.Schema({
   },
   source: {
     type: String,
-    enum: ['ai_detection', 'manual_report', 'integration'],
+    enum: ['ai_detection', 'satellite_analysis', 'manual_report', 'integration'],
     default: 'ai_detection'
+  },
+  // AI Service specific fields
+  spectralIndices: {
+    ndvi: Number,  // Normalized Difference Vegetation Index
+    ndwi: Number,  // Normalized Difference Water Index
+    ndbi: Number   // Normalized Difference Built-up Index
+  },
+  affectedAreaHectares: {
+    type: Number,
+    default: 0
+  },
+  requiredAction: {
+    type: String,
+    default: ''
+  },
+  aiReportId: {
+    type: String,
+    default: null
+  },
+  satelliteAnalysis: {
+    processingTimeMs: Number,
+    imageFilename: String,
+    spectralIndices: {
+      ndvi: Number,
+      ndwi: Number,
+      ndbi: Number
+    }
   }
 }, {
   timestamps: true

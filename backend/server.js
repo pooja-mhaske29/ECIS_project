@@ -9,6 +9,7 @@ dotenv.config();
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const violationRoutes = require('./routes/violationRoutes');
+const aiIntegrationRoutes = require('./routes/aiIntegrationRoutes');
 
 const app = express();
 
@@ -42,8 +43,19 @@ mongoose.connect(process.env.MONGODB_URI)
 // ==================== ROUTES ====================
 app.use('/api/auth', authRoutes);
 app.use('/api/violations', violationRoutes);
+app.use('/api/ai-integration', aiIntegrationRoutes);
 
 // ==================== HEALTH CHECK ENDPOINTS ====================
+// Health endpoint for frontend
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ 
+    success: true,
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  });
+});
+
 app.get('/health', (req, res) => {
   res.status(200).json({ 
     success: true,
@@ -68,6 +80,15 @@ app.get('/', (req, res) => {
         getAll: 'GET /api/violations',
         create: 'POST /api/violations',
         analytics: 'GET /api/violations/analytics'
+      },
+      aiIntegration: {
+        healthCheck: 'GET /api/ai-integration/health',
+        detectCrime: 'POST /api/ai-integration/detect',
+        batchDetect: 'POST /api/ai-integration/batch-detect',
+        getHotspots: 'GET /api/ai-integration/hotspots',
+        getStats: 'GET /api/ai-integration/stats',
+        getReports: 'GET /api/ai-integration/reports',
+        receiveWebhook: 'POST /api/ai-integration/webhook'
       }
     }
   });
@@ -105,7 +126,7 @@ app.use((err, req, res, next) => {
 });
 
 // ==================== START SERVER ====================
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8000;
 
 const server = app.listen(PORT, () => {
   console.log('\n' + '='.repeat(50));
