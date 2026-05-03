@@ -33,7 +33,7 @@ export default function HotspotMap() {
   const fetchHotspots = async () => {
     try {
       const response = await api.get('/hotspots');
-      const hotspotsData = response.data?.data || [];
+      const hotspotsData = response.data?.hotspots || response.data?.data || [];
       setHotspots(hotspotsData);
       
       // Center map on first hotspot if available
@@ -79,8 +79,8 @@ export default function HotspotMap() {
           >
             <Popup>
               <div className="text-xs">
-                <p className="font-bold">{hotspot.region_name || 'Hotspot'}</p>
-                <p>Incidents: {hotspot.incidents_count || 0}</p>
+                <p className="font-bold">{hotspot.region_name || hotspot.name || hotspot.location_name || 'Hotspot'}</p>
+                <p>Reports: {hotspot.reports_count || 0}</p>
                 <p className="capitalize">Severity: {hotspot.severity || 'Unknown'}</p>
               </div>
             </Popup>

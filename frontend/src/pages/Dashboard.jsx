@@ -19,7 +19,7 @@ export default function Dashboard() {
       >
         <h1 className="text-4xl font-bold text-white">Dashboard</h1>
         <p className="text-gray-400">
-          Real-time environmental crime intelligence and detection metrics
+          Real-time environmental crime intelligence and geospatial risk metrics
         </p>
       </motion.div>
 

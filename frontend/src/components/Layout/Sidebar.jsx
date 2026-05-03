@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 const menuItems = [
-  { emoji: '🛰️', label: 'Satellite Analysis', path: '/satellite' },
+  { emoji: '🌐', label: 'Location Analysis', path: '/analyze' },
   { emoji: '📊', label: 'Dashboard', path: '/dashboard' },
   { emoji: '🔍', label: 'Crime Detection', path: '/detection' },
   { emoji: '📋', label: 'Reports', path: '/reports' },

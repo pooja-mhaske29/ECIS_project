@@ -1,17 +1,15 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { crimeService } from '../services/api';
 import { crimeTypeColors, severityColors, formatCoordinates } from '../utils/constants';
-import { MapPin, Zap, AlertTriangle } from 'lucide-react';
+import { MapPin, AlertTriangle } from 'lucide-react';
 import { useApi, useForm } from '@/hooks';
 
 export default function Detection() {
   const [result, setResult] = useState(null);
-  const mapRef = useRef(null);
 
-  // Initialize form hook
-  const { values: formData, handleChange, handleSubmit } = useForm(
+  const { values: formData, handleChange } = useForm(
     {
       latitude: '',
       longitude: '',
@@ -27,13 +25,8 @@ export default function Detection() {
         throw new Error('Invalid coordinates');
       }
 
-      const response = await crimeService.detectCrime(
-        lat,
-        lng,
-        values.locationName,
-        values.address
-      );
-      setResult(response.data.data);
+      const response = await crimeService.analyzeLocation(lat, lng);
+      setResult(response.data);
     }
   );
 
@@ -47,15 +40,10 @@ export default function Detection() {
         throw new Error('Invalid coordinates');
       }
 
-      const response = await crimeService.detectCrime(
-        lat,
-        lng,
-        formData.locationName,
-        formData.address
-      );
-      setResult(response.data.data);
+      const response = await crimeService.analyzeLocation(lat, lng);
+      setResult(response.data);
       toast.success('Crime detection analysis complete');
-      return response.data.data;
+      return response.data;
     },
     { showError: true }
   );
@@ -63,7 +51,7 @@ export default function Detection() {
   const handleDetect = async (e) => {
     e.preventDefault();
 
-    if (!formData.latitude || !formData.longitude || !formData.address) {
+    if (!formData.latitude || !formData.longitude) {
       toast.error('Please fill in all required fields');
       return;
     }
@@ -101,8 +89,6 @@ export default function Detection() {
       toast.error('Geolocation not supported');
     }
   };
-
-  const spectralIndices = result?.aiResult?.spectral_indices;
 
   return (
     <div className="space-y-6 animate-fade-in max-w-6xl mx-auto">
@@ -190,7 +176,6 @@ export default function Detection() {
                 onChange={handleChange}
                 className="input-field"
                 placeholder="e.g., Amazon Basin, Brazil"
-                required
               />
             </div>
 
@@ -226,113 +211,51 @@ export default function Detection() {
             {/* Main Result Card */}
             <motion.div
               whileHover={{ borderColor: 'rgba(0, 255, 255, 0.3)' }}
-              className={`card border-2 ${crimeTypeColors[result.aiResult.crime_type]?.border}`}
+              className={`card border-2 ${crimeTypeColors[result.crime_type_prediction]?.border}`}
             >
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h3 className={`text-2xl font-bold capitalize ${crimeTypeColors[result.aiResult.crime_type]?.text}`}>
-                    {result.aiResult.crime_type.replace(/_/g, ' ')}
+                  <h3 className={`text-2xl font-bold capitalize ${crimeTypeColors[result.crime_type_prediction]?.text}`}>
+                    {result.crime_display_name}
                   </h3>
-                  <p className="text-gray-400 text-sm mt-1">{result.databaseRecord.title}</p>
+                  <p className="text-gray-400 text-sm mt-1">{result.region_name}</p>
                 </div>
-                <span className={`badge ${severityColors[result.aiResult.severity]?.badge}`}>
-                  {result.aiResult.severity.toUpperCase()}
+                <span className={`badge ${severityColors[result.severity]?.badge}`}>
+                  {result.risk_level}
                 </span>
               </div>
 
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="p-3 bg-dark-700/30 rounded-lg">
                   <p className="text-gray-400 text-xs mb-1">Confidence Score</p>
-                  <p className="text-neon-green text-xl font-bold">{result.aiResult.confidence.toFixed(1)}%</p>
+                  <p className="text-neon-green text-xl font-bold">{result.recommendations.priority}</p>
                 </div>
                 <div className="p-3 bg-dark-700/30 rounded-lg">
                   <p className="text-gray-400 text-xs mb-1">Risk Score</p>
-                  <p className="text-neon-cyan text-xl font-bold">{result.aiResult.risk_score}/100</p>
+                  <p className="text-neon-cyan text-xl font-bold">{result.risk_score}/100</p>
                 </div>
                 <div className="p-3 bg-dark-700/30 rounded-lg">
-                  <p className="text-gray-400 text-xs mb-1">Affected Area</p>
-                  <p className="text-neon-green text-lg font-bold">{result.aiResult.affected_area_hectares.toFixed(0)} ha</p>
+                  <p className="text-gray-400 text-xs mb-1">Land Use</p>
+                  <p className="text-neon-green text-lg font-bold capitalize">{result.land_use_type?.replace(/_/g, ' ')}</p>
                 </div>
                 <div className="p-3 bg-dark-700/30 rounded-lg">
                   <p className="text-gray-400 text-xs mb-1">Location</p>
-                  <p className="text-neon-cyan text-sm font-bold">{formatCoordinates(result.aiResult.location.latitude, result.aiResult.location.longitude)}</p>
+                  <p className="text-neon-cyan text-sm font-bold">{formatCoordinates(result.coordinates.lat, result.coordinates.lon)}</p>
                 </div>
               </div>
 
-              {/* Evidence */}
               <div className="mb-4">
-                <h4 className="text-sm font-semibold text-neon-green mb-2">Evidence Summary</h4>
-                <p className="text-gray-300 text-sm">{result.aiResult.evidence}</p>
+                <h4 className="text-sm font-semibold text-neon-green mb-2">Environmental News</h4>
+                <p className="text-gray-300 text-sm">{result.environmental_news}</p>
               </div>
 
-              {/* Required Action */}
               <div className="p-3 bg-red-900/20 border border-red-500/30 rounded-lg">
                 <p className="text-red-400 text-sm font-semibold flex items-center space-x-2">
                   <AlertTriangle className="w-4 h-4" />
-                  <span>{result.aiResult.required_action}</span>
+                  <span>{result.recommendations.immediate_action}</span>
                 </p>
               </div>
             </motion.div>
-
-            {/* Spectral Indices */}
-            {spectralIndices && (
-              <motion.div
-                whileHover={{ borderColor: 'rgba(0, 255, 255, 0.3)' }}
-                className="card"
-              >
-                <h4 className="text-lg font-semibold text-neon-green mb-4 flex items-center space-x-2">
-                  <Zap className="w-5 h-5" />
-                  <span>Spectral Indices Analysis</span>
-                </h4>
-
-                <div className="grid grid-cols-3 gap-4">
-                  {/* NDVI */}
-                  <div className="space-y-2">
-                    <p className="text-gray-400 text-sm">NDVI</p>
-                    <p className="text-2xl font-bold text-neon-green">{spectralIndices.ndvi.toFixed(3)}</p>
-                    <p className="text-xs text-gray-500">Vegetation Index</p>
-                    <div className="w-full bg-dark-700 rounded-full h-2 overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${((spectralIndices.ndvi + 1) / 2) * 100}%` }}
-                        transition={{ duration: 1 }}
-                        className="h-full bg-gradient-neon"
-                      />
-                    </div>
-                  </div>
-
-                  {/* NDWI */}
-                  <div className="space-y-2">
-                    <p className="text-gray-400 text-sm">NDWI</p>
-                    <p className="text-2xl font-bold text-neon-cyan">{spectralIndices.ndwi.toFixed(3)}</p>
-                    <p className="text-xs text-gray-500">Water Index</p>
-                    <div className="w-full bg-dark-700 rounded-full h-2 overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${((spectralIndices.ndwi + 1) / 2) * 100}%` }}
-                        transition={{ duration: 1 }}
-                        className="h-full bg-gradient-to-r from-blue-400 to-cyan-400"
-                      />
-                    </div>
-                  </div>
-
-                  {/* NDBI */}
-                  <div className="space-y-2">
-                    <p className="text-gray-400 text-sm">NDBI</p>
-                    <p className="text-2xl font-bold text-orange-400">{spectralIndices.ndbi.toFixed(3)}</p>
-                    <p className="text-xs text-gray-500">Built-up Index</p>
-                    <div className="w-full bg-dark-700 rounded-full h-2 overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${((spectralIndices.ndbi + 1) / 2) * 100}%` }}
-                        transition={{ duration: 1 }}
-                        className="h-full bg-gradient-to-r from-orange-400 to-red-400"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
           </motion.div>
         )}
       </div>

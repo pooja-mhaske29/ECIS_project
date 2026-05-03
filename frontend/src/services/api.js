@@ -41,6 +41,25 @@ export const authService = {
 
 // AI Integration endpoints
 export const crimeService = {
+  analyzeLocation: (latitude, longitude) =>
+    api.post('/analyze-location', {
+      latitude,
+      longitude,
+    }),
+
+  getNearbyHotspots: (lat, lon, radius = 100) =>
+    api.get('/hotspots/nearby', {
+      params: { lat, lon, radius_km: radius },
+    }),
+
+  submitReport: (reportData) =>
+    api.post('/reports/submit', reportData),
+
+  getRegionInfo: (lat, lon) =>
+    api.get('/region/info', {
+      params: { lat, lon },
+    }),
+
   detectCrime: (latitude, longitude, locationName, address) =>
     api.post('/ai-integration/detect', {
       latitude,
@@ -53,16 +72,43 @@ export const crimeService = {
     api.post('/ai-integration/batch-detect', { locations }),
   
   getHotspots: () =>
-    api.get('/ai-integration/hotspots'),
+    api.get('/hotspots'),
   
   getStats: () =>
-    api.get('/ai-integration/stats'),
+    api.get('/stats'),
   
   getReports: () =>
-    api.get('/ai-integration/reports'),
+    api.get('/reports'),
   
   checkHealth: () =>
     api.get('/ai-integration/health'),
+};
+
+export const analyzeLocation = async (latitude, longitude) => {
+  const response = await api.post('/analyze-location', {
+    latitude,
+    longitude,
+  });
+  return response.data;
+};
+
+export const getNearbyHotspots = async (lat, lon, radius = 100) => {
+  const response = await api.get('/hotspots/nearby', {
+    params: { lat, lon, radius_km: radius },
+  });
+  return response.data;
+};
+
+export const submitReport = async (reportData) => {
+  const response = await api.post('/reports/submit', reportData);
+  return response.data;
+};
+
+export const getRegionInfo = async (lat, lon) => {
+  const response = await api.get('/region/info', {
+    params: { lat, lon },
+  });
+  return response.data;
 };
 
 // Violations endpoints

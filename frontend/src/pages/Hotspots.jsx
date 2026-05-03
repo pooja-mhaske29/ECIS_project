@@ -26,7 +26,7 @@ export default function Hotspots() {
     []
   );
 
-  const hotspots = hotspotsResponse?.data || [];
+  const hotspots = hotspotsResponse?.hotspots || hotspotsResponse?.data || [];
 
   // Initialize selected crime types
   useMemo(() => {

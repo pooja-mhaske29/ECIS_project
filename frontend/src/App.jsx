@@ -6,7 +6,7 @@ import LoadingSpinner from '@components/Common/LoadingSpinner';
 import '@styles/index.css';
 
 // Lazy load pages
-const SatelliteAnalysis = lazy(() => import('@pages/SatelliteAnalysis'));
+const LocationAnalysis = lazy(() => import('@pages/LocationAnalysis'));
 const Dashboard = lazy(() => import('@pages/Dashboard'));
 const CrimeDetection = lazy(() => import('@pages/Detection'));
 const Reports = lazy(() => import('@pages/Reports'));
@@ -29,7 +29,8 @@ function App() {
           <Route element={<MainLayout />}>
             <Route path="/" element={<Suspense fallback={<LoadingSpinner fullScreen />}><Dashboard /></Suspense>} />
             <Route path="/dashboard" element={<Suspense fallback={<LoadingSpinner fullScreen />}><Dashboard /></Suspense>} />
-            <Route path="/satellite" element={<Suspense fallback={<LoadingSpinner fullScreen />}><SatelliteAnalysis /></Suspense>} />
+            <Route path="/analyze" element={<Suspense fallback={<LoadingSpinner fullScreen />}><LocationAnalysis /></Suspense>} />
+            <Route path="/satellite" element={<Navigate to="/analyze" replace />} />
             <Route path="/detection" element={<Suspense fallback={<LoadingSpinner fullScreen />}><CrimeDetection /></Suspense>} />
             <Route path="/reports" element={<Suspense fallback={<LoadingSpinner fullScreen />}><Reports /></Suspense>} />
             <Route path="/hotspots" element={<Suspense fallback={<LoadingSpinner fullScreen />}><Hotspots /></Suspense>} />

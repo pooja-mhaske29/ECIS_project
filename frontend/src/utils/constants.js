@@ -57,35 +57,6 @@ export const getRiskLevelLabel = (riskScore) => {
   return 'Low';
 };
 
-// Spectral Indices
-export const SPECTRAL_INDICES = [
-  {
-    id: 'true-color',
-    name: 'True Color',
-    description: 'Natural RGB composite',
-  },
-  {
-    id: 'false-color',
-    name: 'False Color',
-    description: 'NIR composite for vegetation',
-  },
-  {
-    id: 'ndvi',
-    name: 'NDVI',
-    description: 'Vegetation index (green scale)',
-  },
-  {
-    id: 'ndwi',
-    name: 'NDWI',
-    description: 'Water index (blue scale)',
-  },
-  {
-    id: 'ndbi',
-    name: 'NDBI',
-    description: 'Built-up index (red scale)',
-  },
-];
-
 // Map Configuration
 export const MAP_CONFIG = {
   DEFAULT_CENTER: [20, 0],
@@ -94,8 +65,10 @@ export const MAP_CONFIG = {
 
 // API Endpoints
 export const API_ENDPOINTS = {
-  SATELLITE_ANALYZE: '/satellite/analyze',
-  SATELLITE_IMAGE: '/satellite/image',
+  ANALYZE_LOCATION: '/analyze-location',
+  NEARBY_HOTSPOTS: '/hotspots/nearby',
+  SUBMIT_REPORT: '/reports/submit',
+  REGION_INFO: '/region/info',
   STATS: '/stats',
   HOTSPOTS: '/hotspots',
   REPORTS: '/reports',

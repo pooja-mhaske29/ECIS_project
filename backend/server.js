@@ -10,6 +10,7 @@ dotenv.config();
 const authRoutes = require('./routes/authRoutes');
 const violationRoutes = require('./routes/violationRoutes');
 const aiIntegrationRoutes = require('./routes/aiIntegrationRoutes');
+const geospatialRoutes = require('./routes/geospatialRoutes');
 
 const app = express();
 
@@ -44,6 +45,7 @@ mongoose.connect(process.env.MONGODB_URI)
 app.use('/api/auth', authRoutes);
 app.use('/api/violations', violationRoutes);
 app.use('/api/ai-integration', aiIntegrationRoutes);
+app.use('/api/v1', geospatialRoutes);
 
 // ==================== HEALTH CHECK ENDPOINTS ====================
 // Health endpoint for frontend
@@ -126,7 +128,7 @@ app.use((err, req, res, next) => {
 });
 
 // ==================== START SERVER ====================
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, () => {
   console.log('\n' + '='.repeat(50));

@@ -22,7 +22,7 @@ export default function RecentAlerts() {
   const fetchAlerts = async () => {
     try {
       const response = await api.get('/reports?limit=5&sort=-created_at');
-      setAlerts(response.data?.data || []);
+      setAlerts(response.data?.reports || response.data?.data || []);
       setLoading(false);
     } catch (err) {
       console.error('Failed to fetch alerts:', err);
@@ -60,13 +60,13 @@ export default function RecentAlerts() {
                 <span className="text-lg flex-shrink-0">⚠️</span>
                 <div className="flex-1">
                   <p className="font-semibold text-sm capitalize">
-                    {alert.crime_type || 'Unknown'} Detected
+                    {alert.crime_display_name || alert.crime_type || 'Unknown'} Detected
                   </p>
                   <p className="text-xs opacity-80 mt-1">
-                    {alert.description || 'Crime detection alert'}
+                    {alert.description || alert.environmental_news || 'Crime detection alert'}
                   </p>
                   <p className="text-xs opacity-60 mt-2">
-                    {new Date(alert.created_at).toLocaleTimeString()}
+                    {new Date(alert.created_at || alert.timestamp).toLocaleTimeString()}
                   </p>
                 </div>
               </div>
